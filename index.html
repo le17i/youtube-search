@@ -61,53 +61,54 @@
                 var API_KEY = "AIzaSyAIryPCNbSS-dwRqZLGvPeLKd9aKsIsS8I";
                 var URL_BASE = "https://www.googleapis.com/youtube/v3/search";
 
-                var app = angular.module("YouTubeSearch", []);
+                angular.module("YouTubeSearch", [])
+                    .controller("MainController", function($scope, $http, $sce) {
+                        $scope.searchModel = "";
+                        $scope.results = [];
+                        $scope.modalVideo = null;
+                        $scope.modalEl = $('#modalVideo');
 
-                app.controller("MainController", function($scope, $http, $sce) {
-                    $scope.searchModel = "";
-                    $scope.results = [];
-                    $scope.modalVideo = null;
-                    $scope.modalEl = $('#modalVideo');
+                        $scope.SearchFormSubmit = function() {
 
-                    $scope.SearchFormSubmit = function() {
+                            var searchParams = {
+                                part: 'id,snippet',
+                                q: $scope.searchModel,
+                                key: API_KEY
+                            };
 
-                        var searchParams = {
-                            part: 'id,snippet',
-                            q: $scope.searchModel,
-                            key: API_KEY
+                            var search = $http({
+                                method: "GET",
+                                url: URL_BASE,
+                                params: searchParams
+                            });
+
+                            search.then(
+                                function success(response) {
+                                    $scope.results = response.data.items;
+                                },
+                                function error(response) {
+                                    console.error("Error response", response);
+                                }
+                            );
                         };
 
-                        var search = $http({
-                            method: "GET",
-                            url: URL_BASE,
-                            params: searchParams
-                        });
-
-                        search.then(
-                            function success(response) {
-                                $scope.results = response.data.items;
-                            },
-                            function error(response) {
-                                console.error("Error response", response);
-                            }
-                        );
-                    };
-
-                    $scope.OpenModal = function(video) {
-                        $scope.modalVideo = {
-                            title: video.snippet.title,
-                            embed: $sce.trustAsResourceUrl("http://www.youtube.com/embed/" + video.id.videoId + "?autoplay=1"),
-                            isActive: true
+                        $scope.OpenModal = function(video) {
+                            var embedURL = ["http://www.youtube.com/embed/", video.id.videoId, "?autoplay=1"];
+                            
+                            $scope.modalVideo = {
+                                title: video.snippet.title,
+                                embed: $sce.trustAsResourceUrl(embedURL),
+                                isActive: true
+                            };
+                            $scope.modalEl.modal('show');
                         };
-                        $scope.modalEl.modal('show');
-                    };
-                    
-                    $scope.modalEl.on("hidden.bs.modal", function() {
-                        $scope.$apply(function() {
-                            $scope.modalVideo.isActive = false;
+                        
+                        $scope.modalEl.on("hidden.bs.modal", function() {
+                            $scope.$apply(function() {
+                                $scope.modalVideo.isActive = false;
+                            });
                         });
                     });
-                });
             }(angular, jQuery));
         </script>
     </body>
