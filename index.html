@@ -1,0 +1,114 @@
+<html ng-app="YouTubeSearch">
+    <head>
+        <title>YouTube Search with API</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    </head>
+    <body>
+        <section class="container-fluid" ng-controller="MainController">
+            <header class="row">            
+                <form class="form-inline" ng-submit="SearchFormSubmit()">
+                    <div class="form-group">
+                        <label class="sr-only" for="searchField">Pesquisa</label>
+                        <input type="search" class="form-control" id="searchField" placeholder="Pesquisar" ng-model="searchModel">
+                    </div>
+                    <button type="submit" class="btn btn-default">
+                        <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                    </button>
+                </form>
+            </header>
+            <section class="row">
+                <div class="media" ng-repeat="result in results">
+                    <div class="media-left">
+                        <a href="#" ng-click="OpenModal(result)">
+                            <img class="media-object" ng-src="{{result.snippet.thumbnails.default.url}}" alt="{{result.snippet.title}}" width="120" height="90">
+                        </a>
+                    </div>
+                    <div class="media-body">
+                        <h4 class="media-heading">{{result.snippet.title}}</h4>
+                        <p>{{result.snippet.description}}</p>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="modal fade" id="modalVideo" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+                <div class="modal-dialog" role="document">
+                    <section class="modal-content">
+                        <header class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="gridSystemModalLabel">{{modalVideo.title}}</h4>
+                        </header>
+                        <article class="modal-body">
+                            <div class="embed-responsive embed-responsive-16by9">
+                                <iframe ng-src="{{modalVideo.embed}}" ng-if="modalVideo.isActive === true" frameborder="0"></iframe>
+                            </div>
+                        </article>
+                        <footer class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </footer>
+                    </section>
+                </div>
+            </aside>
+        </section>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+        <script>
+            ;(function(angular, $) {
+                "use strict";
+
+                var API_KEY = "AIzaSyAIryPCNbSS-dwRqZLGvPeLKd9aKsIsS8I";
+                var URL_BASE = "https://www.googleapis.com/youtube/v3/search";
+
+                var app = angular.module("YouTubeSearch", []);
+
+                app.controller("MainController", function($scope, $http, $sce) {
+                    $scope.searchModel = "";
+                    $scope.results = [];
+                    $scope.modalVideo = null;
+                    $scope.modalEl = $('#modalVideo');
+
+                    $scope.SearchFormSubmit = function() {
+
+                        var searchParams = {
+                            part: 'id,snippet',
+                            q: $scope.searchModel,
+                            key: API_KEY
+                        };
+
+                        var search = $http({
+                            method: "GET",
+                            url: URL_BASE,
+                            params: searchParams
+                        });
+
+                        search.then(
+                            function success(response) {
+                                $scope.results = response.data.items;
+                            },
+                            function error(response) {
+                                console.error("Error response", response);
+                            }
+                        );
+                    };
+
+                    $scope.OpenModal = function(video) {
+                        $scope.modalVideo = {
+                            title: video.snippet.title,
+                            embed: $sce.trustAsResourceUrl("http://www.youtube.com/embed/" + video.id.videoId + "?autoplay=1"),
+                            isActive: true
+                        };
+                        $scope.modalEl.modal('show');
+                    };
+                    
+                    $scope.modalEl.on("hidden.bs.modal", function() {
+                        $scope.$apply(function() {
+                            $scope.modalVideo.isActive = false;
+                        });
+                    });
+                });
+            }(angular, jQuery));
+        </script>
+    </body>
+</html>
