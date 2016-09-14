@@ -1,2 +1,2 @@
-# youtube-search
-A simple app using YouTube API to search videos
+# YouTube Search
+A simple app using YouTube API to search videos.
